@@ -33,7 +33,7 @@ This will produce the images and models displaying the customer churn calculatio
 
 NOTE: Before the calculations start, the `images/` and `models/` directories will be emptied to remove previous runs' data. 
 
-
+----
 
 To run the tests and logger, run this on the command line:
 
