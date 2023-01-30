@@ -84,6 +84,7 @@ def perform_eda(df):
         linewidths=2)
     figure = heatmap_diagram.get_figure()
     figure.savefig('images/eda/heatmap_diagram.png')
+    plt.close('all')
 
 
 def encoder_helper(df, category_lst):
@@ -94,8 +95,6 @@ def encoder_helper(df, category_lst):
     input:
             df: pandas dataframe
             category_lst: list of columns that contain categorical features
-            response: string of response name [optional argument that
-                could be used for naming variables or index y column
 
     output:
             df: pandas dataframe with new columns for
@@ -117,8 +116,6 @@ def perform_feature_engineering(df):
     '''
     input:
               df: pandas dataframe
-              response: string of response name
-                [optional argument that could be used for naming variables or index y column]
 
     output:
               X_train: X training data
@@ -212,6 +209,7 @@ def classification_report_image(y_train,
     plt.axis('off')
     plt.savefig("images/results/logistic_regression_classification_report.png")
     plt.clf()
+    plt.close('all')
 
 
 def feature_importance_plot(model, X_data, output_pth):
@@ -226,6 +224,7 @@ def feature_importance_plot(model, X_data, output_pth):
              None
     '''
     importances = model.best_estimator_.feature_importances_
+
     # Sort feature importances in descending order
     indices = np.argsort(importances)[::-1]
 
@@ -245,6 +244,7 @@ def feature_importance_plot(model, X_data, output_pth):
     # Add feature names as x-axis labels
     plt.xticks(range(X_data.shape[1]), names, rotation=90)
     plt.savefig(output_pth)
+    plt.close('all')
 
 
 def train_models(X_train, X_test, y_train, y_test, X):
@@ -260,11 +260,8 @@ def train_models(X_train, X_test, y_train, y_test, X):
               None
     '''
 
-    # grid search
     rfc = RandomForestClassifier(random_state=42)
-    # Use a different solver if the default 'lbfgs' fails to converge
-    # Reference:
-    # https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+
     lrc = LogisticRegression(solver='lbfgs', max_iter=3000)
 
     param_grid = {
@@ -286,14 +283,13 @@ def train_models(X_train, X_test, y_train, y_test, X):
     y_test_preds_lr = lrc.predict(X_test)
 
     lrc_plot = plot_roc_curve(lrc, X_test, y_test)
-    # plots
+
     plt.figure(figsize=(15, 8))
     axis = plt.gca()
     lrc_plot.plot(ax=axis, alpha=0.8)
     plt.savefig("images/results/roc_lrc_plot.png")
-    plt.show()
+    plt.close('all')
 
-    # save best model
     joblib.dump(cv_rfc.best_estimator_, './models/rfc_model.pkl')
     joblib.dump(lrc, './models/logistic_model.pkl')
 
@@ -305,11 +301,11 @@ def train_models(X_train, X_test, y_train, y_test, X):
     axis = plt.gca()
     lrc_plot.plot(ax=axis, alpha=0.8)
     plt.savefig("images/results/roc_lrc_plot_rfc.png")
-    plt.show()
+    plt.close('all')
 
     explainer = shap.TreeExplainer(cv_rfc.best_estimator_)
     shap_values = explainer.shap_values(X_test)
-    shap.summary_plot(shap_values, X_test, plot_type="bar")
+    shap.summary_plot(shap_values, X_test, plot_type="bar", show=False)
 
     feature_importance_plot(
         cv_rfc, X, "images/results/feature_importance_plot.png")
@@ -322,14 +318,23 @@ def train_models(X_train, X_test, y_train, y_test, X):
         y_test_preds_rf)
 
 
+def clean_up_dirs(dirlist):
+    """Deletes files from directories.
+
+    input:
+            dirlist: Array of string directory names
+
+    output:
+            None
+    """
+    for directory in dirlist:
+        for file in os.listdir(directory):
+            os.remove(os.path.join(directory, file))
+
+
 if __name__ == "__main__":
 
-    for f in os.listdir("./images/eda"):
-        os.remove(os.path.join("./images/eda", f))
-    for f in os.listdir("images/results"):
-        os.remove(os.path.join("images/results", f))
-    for f in os.listdir("models"):
-        os.remove(os.path.join("models", f))
+    clean_up_dirs(["./images/eda", "images/results", "models"])
 
     df = import_data(r"./data/bank_data.csv")
 
