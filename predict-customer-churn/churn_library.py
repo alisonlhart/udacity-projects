@@ -24,6 +24,8 @@ os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 
 sns.set()
 
+# pylint: disable=invalid-name
+
 
 def import_data(pth):
     '''
@@ -38,47 +40,57 @@ def import_data(pth):
     return dataframe
 
 
-def perform_eda(df):
+def perform_eda(dataframe):
     '''
-    perform eda on df and save figures to images folder
+    perform eda on dataframe and save figures to images folder
     input:
-            df: pandas dataframe
+            dataframe: pandas dataframe
 
     output:
             None
     '''
 
-    df['Churn'] = df['Attrition_Flag'].apply(
+    dataframe['Churn'] = dataframe['Attrition_Flag'].apply(
         lambda val: 0 if val == "Existing Customer" else 1)
 
     plt.figure(figsize=(20, 10))
-    churn_diagram = df['Churn'].hist()
+    plt.title("Customer Churn")
+    plt.xlabel("Likelyhood of Churn")
+    plt.ylabel("Customers")
+    churn_diagram = dataframe['Churn'].hist()
     figure = churn_diagram.get_figure()
     figure.savefig('images/eda/churn_diagram.png')
 
     plt.figure(figsize=(20, 10))
-    age_diagram = df['Customer_Age'].hist()
+    plt.title("Customer Ages")
+    plt.xlabel("Age")
+    plt.ylabel("Number of Customers")
+    age_diagram = dataframe['Customer_Age'].hist()
     figure = age_diagram.get_figure()
     figure.savefig('images/eda/age_diagram.png')
 
     plt.figure(figsize=(20, 10))
-    marital_plot = df.Marital_Status.value_counts('normalize').plot(kind='bar')
+    plt.title("Marital Status Percentages")
+    plt.xlabel("Marital Status")
+    plt.ylabel("Percentage of Customers (out of 1)")
+    marital_plot = dataframe.Marital_Status.value_counts(
+        'normalize').plot(kind='bar')
     figure = marital_plot.get_figure()
     figure.savefig('images/eda/marital_plot.png')
 
     plt.figure(figsize=(20, 10))
-    # Show distributions of 'Total_Trans_Ct' and add a smooth curve obtained
-    # using a kernel density estimate
+    plt.title("Total Trans CT Density")
     total_diagram = sns.histplot(
-        df['Total_Trans_Ct'],
+        dataframe['Total_Trans_Ct'],
         stat='density',
         kde=True)
     figure = total_diagram.get_figure()
     figure.savefig('images/eda/total_diagram.png')
 
     plt.figure(figsize=(20, 10))
+    plt.title("Feature Heatmap")
     heatmap_diagram = sns.heatmap(
-        df.corr(),
+        dataframe.corr(),
         annot=False,
         cmap='Dark2_r',
         linewidths=2)
@@ -87,35 +99,35 @@ def perform_eda(df):
     plt.close('all')
 
 
-def encoder_helper(df, category_lst):
+def encoder_helper(dataframe, category_lst):
     '''
     helper function to turn each categorical column into a new column with
     propotion of churn for each category - associated with cell 15 from the notebook
 
     input:
-            df: pandas dataframe
+            dataframe: pandas dataframe
             category_lst: list of columns that contain categorical features
 
     output:
-            df: pandas dataframe with new columns for
+            dataframe: pandas dataframe with new columns for
     '''
     for feature in category_lst:
         lst = []
-        feature_groups = df.groupby(feature).mean()['Churn']
+        feature_groups = dataframe.groupby(feature).mean()['Churn']
 
-        for val in df[feature]:
+        for val in dataframe[feature]:
             lst.append(feature_groups.loc[val])
         name_plus_churn = feature + "_Churn"
 
-        df[name_plus_churn] = lst
+        dataframe[name_plus_churn] = lst
 
-    return df
+    return dataframe
 
 
-def perform_feature_engineering(df):
+def perform_feature_engineering(dataframe):
     '''
     input:
-              df: pandas dataframe
+              dataframe: pandas dataframe
 
     output:
               X_train: X training data
@@ -151,19 +163,19 @@ def perform_feature_engineering(df):
         'Income_Category_Churn',
         'Card_Category_Churn']
 
-    y = df['Churn']
+    y = dataframe['Churn']
     X = pd.DataFrame()
 
-    df = encoder_helper(df, category_lst)
+    dataframe = encoder_helper(dataframe, category_lst)
 
-    X[keep_cols] = df[keep_cols]
+    X[keep_cols] = dataframe[keep_cols]
     X.head()
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42)
     return X_train, X_test, y_train, y_test, X
 
 
-def classification_report_image(y_train,
+def classification_report_image(y_train,                # pylint: disable=too-many-arguments
                                 y_test,
                                 y_train_preds_lr,
                                 y_train_preds_rf,
@@ -293,13 +305,20 @@ def train_models(X_train, X_test, y_train, y_test, X):
     joblib.dump(cv_rfc.best_estimator_, './models/rfc_model.pkl')
     joblib.dump(lrc, './models/logistic_model.pkl')
 
+    rfc_model = joblib.load('./models/rfc_model.pkl')
     lr_model = joblib.load('./models/logistic_model.pkl')
 
     lrc_plot = plot_roc_curve(lr_model, X_test, y_test)
 
     plt.figure(figsize=(15, 8))
-    axis = plt.gca()
-    lrc_plot.plot(ax=axis, alpha=0.8)
+    ax = plt.gca()
+    rfc_disp = plot_roc_curve(  # pylint: disable=unused-variable
+        rfc_model,
+        X_test,
+        y_test,
+        ax=ax,
+        alpha=0.8)
+    lrc_plot.plot(ax=ax, alpha=0.8)
     plt.savefig("images/results/roc_lrc_plot_rfc.png")
     plt.close('all')
 
@@ -340,6 +359,7 @@ if __name__ == "__main__":
 
     perform_eda(df)
 
-    X_train, X_test, y_train, y_test, X = perform_feature_engineering(df)
+    X_train_data, X_test_data, y_train_data, y_test_data, X_df = perform_feature_engineering(
+        df)
 
-    train_models(X_train, X_test, y_train, y_test, X)
+    train_models(X_train_data, X_test_data, y_train_data, y_test_data, X_df)

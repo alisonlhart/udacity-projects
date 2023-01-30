@@ -4,8 +4,10 @@
 - Author: alisonlhart (Alison Hart)
 - Date: Jan 29 2023
 
+
 ## Project Description
 This project calculates customer churn based on a dataset, but the goal of this project is to produce clean, refactored, efficient code adhering to PEP8 Guidelines and Pylint standards. 
+
 
 ## Files and data description
 
@@ -21,7 +23,25 @@ This project calculates customer churn based on a dataset, but the goal of this 
 
 - `data/` : Contains the Bank Data CSV for calculating customer churn. 
 
-- `requirements_py3.8.txt`: Use this to install requirements for running this script locally. 
+- `requirements.txt`: Required libraries for running the project. 
+
+
+## Required Libraries and Installing Requirements
+
+- `scikit-learn==0.24.1`
+- `shap==0.40.0`
+- `joblib==1.0.1`
+- `pandas==1.2.4`
+- `numpy==1.20.1`
+- `matplotlib==3.3.4`
+- `seaborn==0.11.2`
+- `pylint==2.7.4`
+- `autopep8==1.5.6`
+
+Install these libraries with the `requirements.txt` file by running this command in the `predict-customer-churn/` directory:
+
+`pip install -r requirements.txt`
+
 
 ## Running Files
 

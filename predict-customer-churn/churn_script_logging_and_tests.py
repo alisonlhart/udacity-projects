@@ -16,6 +16,8 @@ from churn_library import (
     train_models,
     clean_up_dirs)
 
+# pylint: disable=invalid-name
+
 
 def test_import(import_data_function):
     '''
@@ -159,7 +161,7 @@ def test_perform_feature_engineering(
     return X_train, X_test, y_train, y_test, X
 
 
-def test_train_models(
+def test_train_models(  # pylint: disable=too-many-arguments
         X_train,
         X_test,
         y_train,
@@ -233,6 +235,12 @@ if __name__ == "__main__":
     df = test_import(import_data)
     test_eda(df, perform_eda)
     test_encoder_helper(df, encoder_helper)
-    X_train, X_test, y_train, y_test, X = test_perform_feature_engineering(
+    X_train_data, X_test_data, y_train_data, y_test_data, X_df = test_perform_feature_engineering(
         df, perform_feature_engineering)
-    test_train_models(X_train, X_test, y_train, y_test, X, train_models)
+    test_train_models(
+        X_train_data,
+        X_test_data,
+        y_train_data,
+        y_test_data,
+        X_df,
+        train_models)
